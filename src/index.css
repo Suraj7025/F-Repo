@@ -72,6 +72,24 @@
   --surface-3: rgba(30, 41, 59, 0.58);
 }
 
+.budget-allocation-row {
+  background-color: #f8fbff;
+  border: 1px solid #dbe5f2;
+}
+
+.budget-allocation-row:hover {
+  background-color: #ffffff;
+}
+
+.dark .budget-allocation-row {
+  background-color: rgba(30, 41, 59, 0.4);
+  border-color: rgba(255, 255, 255, 0.05);
+}
+
+.dark .budget-allocation-row:hover {
+  background-color: rgba(30, 41, 59, 0.6);
+}
+
 /* Darken small utility text in light mode for reliable contrast on glass. */
 html:not(.dark) .text-indigo-500 { color: #4338ca; }
 html:not(.dark) .text-violet-500 { color: #6d28d9; }

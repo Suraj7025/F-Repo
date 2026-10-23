@@ -454,7 +454,7 @@ export default function BudgetPage() {
                 return (
                   <motion.div
                     key={item.category}
-                    className="p-3.5 rounded-2xl transition-all border border-slate-200/80 dark:border-white/5 bg-white/85 dark:bg-slate-800/40 hover:bg-white dark:hover:bg-slate-800/60 shadow-sm dark:shadow-none"
+                    className="budget-allocation-row p-3.5 rounded-2xl transition-all shadow-sm dark:shadow-none"
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: idx * 0.02 }}
