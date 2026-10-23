@@ -8,21 +8,21 @@
 /* --- CSS Custom Properties --- */
 :root {
   /* Colors */
-  --color-primary: #6366f1;
-  --color-primary-light: #818cf8;
-  --color-primary-dark: #4f46e5;
+  --color-primary: #4f46e5;
+  --color-primary-light: #6366f1;
+  --color-primary-dark: #3730a3;
   --color-violet: #8b5cf6;
-  --color-emerald: #10b981;
-  --color-emerald-light: #34d399;
-  --color-rose: #f43f5e;
-  --color-rose-light: #fb7185;
-  --color-amber: #f59e0b;
-  --color-amber-light: #fbbf24;
+  --color-emerald: #047857;
+  --color-emerald-light: #059669;
+  --color-rose: #e11d48;
+  --color-rose-light: #e11d48;
+  --color-amber: #b45309;
+  --color-amber-light: #d97706;
 
   /* Glass */
-  --glass-bg: rgba(255, 255, 255, 0.55);
-  --glass-bg-hover: rgba(255, 255, 255, 0.7);
-  --glass-border: rgba(255, 255, 255, 0.6);
+  --glass-bg: rgba(255, 255, 255, 0.82);
+  --glass-bg-hover: rgba(255, 255, 255, 0.94);
+  --glass-border: rgba(71, 85, 105, 0.18);
   --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.06), 0 2px 8px rgba(0, 0, 0, 0.04);
   --glass-shadow-lg: 0 16px 48px rgba(0, 0, 0, 0.08), 0 4px 16px rgba(0, 0, 0, 0.04);
   --glass-blur: blur(24px) saturate(180%);
@@ -31,18 +31,18 @@
   --glass-radius-sm: 14px;
 
   /* Background */
-  --bg-gradient: linear-gradient(135deg, #a5b4fc 0%, #bfdbfe 25%, #c4b5fd 50%, #93c5fd 75%, #a5b4fc 100%);
+  --bg-gradient: linear-gradient(135deg, #c7d9f6 0%, #d9e4fa 25%, #d8d5f8 50%, #c9e0f8 75%, #c7d9f6 100%);
 
   /* Text */
   --text-primary: #0f172a;
-  --text-secondary: #475569;
-  --text-tertiary: #94a3b8;
+  --text-secondary: #334155;
+  --text-tertiary: #64748b;
   --text-on-dark: #f8fafc;
 
   /* Surface */
-  --surface-1: rgba(255, 255, 255, 0.55);
-  --surface-2: rgba(255, 255, 255, 0.35);
-  --surface-3: rgba(255, 255, 255, 0.2);
+  --surface-1: rgba(255, 255, 255, 0.9);
+  --surface-2: rgba(255, 255, 255, 0.72);
+  --surface-3: rgba(255, 255, 255, 0.52);
 
   /* Sidebar */
   --sidebar-width: 260px;
@@ -55,22 +55,31 @@
 
 /* --- Dark Mode --- */
 .dark {
-  --glass-bg: rgba(15, 23, 42, 0.65);
-  --glass-bg-hover: rgba(15, 23, 42, 0.8);
-  --glass-border: rgba(255, 255, 255, 0.1);
+  --glass-bg: rgba(15, 23, 42, 0.88);
+  --glass-bg-hover: rgba(15, 23, 42, 0.96);
+  --glass-border: rgba(203, 213, 225, 0.16);
   --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.3), 0 2px 8px rgba(0, 0, 0, 0.2);
   --glass-shadow-lg: 0 16px 48px rgba(0, 0, 0, 0.4), 0 4px 16px rgba(0, 0, 0, 0.25);
 
   --bg-gradient: linear-gradient(135deg, #0f172a 0%, #1e1b4b 25%, #0f172a 50%, #1a1a2e 75%, #0f172a 100%);
 
   --text-primary: #f1f5f9;
-  --text-secondary: #94a3b8;
-  --text-tertiary: #64748b;
+  --text-secondary: #cbd5e1;
+  --text-tertiary: #94a3b8;
 
-  --surface-1: rgba(30, 41, 59, 0.7);
-  --surface-2: rgba(30, 41, 59, 0.5);
-  --surface-3: rgba(30, 41, 59, 0.3);
+  --surface-1: rgba(30, 41, 59, 0.92);
+  --surface-2: rgba(30, 41, 59, 0.76);
+  --surface-3: rgba(30, 41, 59, 0.58);
 }
+
+/* Darken small utility text in light mode for reliable contrast on glass. */
+html:not(.dark) .text-indigo-500 { color: #4338ca; }
+html:not(.dark) .text-violet-500 { color: #6d28d9; }
+html:not(.dark) .text-emerald-500 { color: #047857; }
+html:not(.dark) .text-rose-500 { color: #be123c; }
+html:not(.dark) .text-amber-500 { color: #b45309; }
+html:not(.dark) .text-slate-400 { color: #64748b; }
+html:not(.dark) .text-slate-500 { color: #475569; }
 
 /* --- Base Styles --- */
 * {
