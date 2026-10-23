@@ -40,7 +40,7 @@ function SyncBadge() {
   const statusConfig = {
     synced: { icon: Cloud, label: 'Synced', className: 'sync-synced', tooltip: 'All changes synced. Click to re-sync.' },
     syncing: { icon: Loader2, label: 'Syncing...', className: 'sync-syncing', tooltip: 'Syncing changes to Google Sheets...' },
-    offline: { icon: CloudOff, label: isGoogle ? 'Offline (Cached)' : 'Demo Mode', className: 'sync-offline', tooltip: isGoogle ? 'Device offline. Changes stored in local cache.' : 'Running in local demo mode. Connect Google in Settings.' },
+    offline: { icon: CloudOff, label: isGoogle ? 'Offline (Cached)' : 'Local Mode', className: 'sync-offline', tooltip: isGoogle ? 'Device offline. Changes stored in local cache.' : 'Changes are saved in this browser. Connect Google in Settings to sync.' },
     error: { icon: AlertCircle, label: 'Sync Error', className: 'sync-error', tooltip: 'Sync failed. Click to retry sync.' },
   };
 

@@ -4,7 +4,7 @@ import './index.css'
 import App from './App.tsx'
 import { useStore } from './lib/store'
 
-// Load stored/demo data immediately before mounting
+// Load saved data immediately before mounting
 useStore.getState().loadData();
 
 createRoot(document.getElementById('root')!).render(

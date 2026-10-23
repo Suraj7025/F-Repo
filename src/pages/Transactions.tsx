@@ -36,6 +36,7 @@ export default function Transactions() {
   const isMobile = useIsMobile();
 
   const [showAddModal, setShowAddModal] = useState(false);
+  const [newTransactionType, setNewTransactionType] = useState<TransactionType>('Spend');
   const [editingTxn, setEditingTxn] = useState<Transaction | null>(null);
   const [search, setSearch] = useState('');
   const [filterCategory, setFilterCategory] = useState('');
@@ -77,6 +78,12 @@ export default function Transactions() {
 
   const totalSpend = getTotalSpend(monthTxns);
   const totalCredit = getTotalCredit(monthTxns);
+
+  const openAddTransaction = (type: TransactionType = 'Spend') => {
+    setEditingTxn(null);
+    setNewTransactionType(type);
+    setShowAddModal(true);
+  };
 
   const handleDelete = (txn: Transaction) => {
     const restored = { ...txn };
@@ -212,19 +219,26 @@ export default function Transactions() {
           </div>
 
           {/* Actions */}
-          <div className="flex items-center gap-2">
-            <button className="btn-secondary text-xs" onClick={handleExportJSON}>
-              <Download size={14} /> JSON
-            </button>
-            <button className="btn-secondary text-xs" onClick={handleExportCSV}>
-              <Download size={14} /> CSV
-            </button>
-            <button className="btn-secondary text-xs" onClick={() => setShowImport(true)}>
-              <Upload size={14} /> Import
-            </button>
-            <button className="btn-primary" onClick={() => setShowAddModal(true)}>
-              <Plus size={16} /> Add
-            </button>
+          <div className="flex flex-col sm:flex-row items-stretch gap-2">
+            <div className="flex items-center gap-2">
+              <button className="btn-secondary flex-1 sm:flex-none" onClick={() => openAddTransaction('Credit')}>
+                <TrendingUp size={16} /> Add Credit
+              </button>
+              <button className="btn-primary flex-1 sm:flex-none" onClick={() => openAddTransaction('Spend')}>
+                <Plus size={16} /> Add Spend
+              </button>
+            </div>
+            <div className="flex items-center gap-2 overflow-x-auto pb-1">
+              <button className="btn-secondary text-xs shrink-0" onClick={handleExportJSON}>
+                <Download size={14} /> JSON
+              </button>
+              <button className="btn-secondary text-xs shrink-0" onClick={handleExportCSV}>
+                <Download size={14} /> CSV
+              </button>
+              <button className="btn-secondary text-xs shrink-0" onClick={() => setShowImport(true)}>
+                <Upload size={14} /> Import
+              </button>
+            </div>
           </div>
         </div>
       </GlassCard>
@@ -316,12 +330,12 @@ export default function Transactions() {
         )
       ) : (
         <EmptyState
-          icon={<Filter size={48} />}
-          title="No transactions found"
-          description="Add your first transaction or adjust filters"
+          icon={filterType === 'Credit' ? <TrendingUp size={48} /> : <Filter size={48} />}
+          title={filterType === 'Credit' ? 'No credits this month' : 'No transactions found'}
+          description={filterType === 'Credit' ? 'Add a refund, cashback, or other credit to see it here.' : 'Add your first transaction or adjust filters'}
           action={
-            <button className="btn-primary" onClick={() => setShowAddModal(true)}>
-              <Plus size={16} /> Add Transaction
+            <button className="btn-primary" onClick={() => openAddTransaction(filterType === 'Credit' ? 'Credit' : 'Spend')}>
+              <Plus size={16} /> {filterType === 'Credit' ? 'Add Credit' : 'Add Transaction'}
             </button>
           }
         />
@@ -329,9 +343,11 @@ export default function Transactions() {
 
       {/* Add/Edit Modal */}
       <TransactionFormModal
+        key={editingTxn ? `edit-${editingTxn.id}` : `new-${newTransactionType}-${showAddModal}`}
         isOpen={showAddModal || !!editingTxn}
         onClose={() => { setShowAddModal(false); setEditingTxn(null); }}
         transaction={editingTxn}
+        initialType={newTransactionType}
         config={config}
         onSave={(data) => {
           if (editingTxn) {
@@ -374,7 +390,7 @@ export default function Transactions() {
           }}
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
-          onClick={() => setShowAddModal(true)}
+          onClick={() => openAddTransaction('Spend')}
         >
           <Plus size={24} />
         </motion.button>
@@ -460,45 +476,31 @@ function TransactionFormModal({
   isOpen,
   onClose,
   transaction,
+  initialType,
   config,
   onSave,
 }: {
   isOpen: boolean;
   onClose: () => void;
   transaction: Transaction | null;
+  initialType: TransactionType;
   config: typeof import('../lib/constants').DEFAULT_CONFIG;
   onSave: (data: Omit<Transaction, 'id'> | Partial<Transaction>) => void;
 }) {
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState(() => transaction ? {
+    date: transaction.date,
+    type: transaction.type,
+    amount: String(transaction.amount),
+    category: transaction.category,
+    notes: transaction.notes,
+    source: transaction.source,
+  } : {
     date: format(new Date(), 'yyyy-MM-dd'),
-    type: 'Spend' as TransactionType,
+    type: initialType,
     amount: '',
-    category: config.categories[0],
+    category: config.categories[0] || 'Other',
     notes: '',
-    source: config.sources[0],
-  });
-
-  // Reset form when transaction changes
-  useState(() => {
-    if (transaction) {
-      setFormData({
-        date: transaction.date,
-        type: transaction.type,
-        amount: String(transaction.amount),
-        category: transaction.category,
-        notes: transaction.notes,
-        source: transaction.source,
-      });
-    } else {
-      setFormData({
-        date: format(new Date(), 'yyyy-MM-dd'),
-        type: 'Spend',
-        amount: '',
-        category: config.categories[0],
-        notes: '',
-        source: config.sources[0],
-      });
-    }
+    source: config.sources[0] || 'Cash',
   });
 
   const handleSubmit = (e: React.FormEvent) => {

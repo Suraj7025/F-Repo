@@ -116,7 +116,7 @@ npm run dev
 npm run build
 ```
 
-FinFlow begins in **Demo Mode** out of the box with realistic multi-month sample transactions, income streams, mutual funds, and emergency fund allocations cached in your browser's `localStorage`.
+FinFlow starts with an **empty tracker**. New transactions and settings are stored in your browser's `localStorage` unless you connect Google Sheets. Use Settings → Data & Import/Export to back up your records, or Settings → Start Fresh to clear all records.
 
 ---
 
@@ -146,7 +146,7 @@ FinFlow begins in **Demo Mode** out of the box with realistic multi-month sample
 1. In FinFlow, open **Settings > Google Sheets Setup**.
 2. Paste your **Spreadsheet URL or ID**, **Web App URL**, and **Secret Key**.
 3. Click **Test Link** to verify connection.
-4. Click **Migrate Demo Data to Sheet Now** to push all current records into your Google Sheet.
+4. Click **Sync Local Records to Sheet** to push current records into your Google Sheet.
    - The script will automatically create and style the tabs: `Transactions`, `Income`, `Investments`, `EmergencyFund`, `Budgets`, and `Config`.
 
 ---

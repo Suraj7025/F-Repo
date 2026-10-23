@@ -8,13 +8,6 @@ import { DEFAULT_CONFIG, DEFAULT_GOOGLE_CONFIG } from './constants';
 import { api } from './api';
 import { generateId, getCurrentMonth } from './utils';
 import { showToast } from '../hooks';
-import {
-  generateDemoTransactions,
-  generateDemoIncome,
-  generateDemoInvestments,
-  generateDemoEmergencyFund,
-  generateDemoBudgets,
-} from './demo-data';
 
 // Helper for optimistic mutations with rollback on sync failure
 async function syncWithRollback<T>(
@@ -26,7 +19,7 @@ async function syncWithRollback<T>(
 ) {
   const { googleConfig } = get();
   if (!googleConfig.configured) {
-    // Running in local/demo mode
+    // Running in local mode
     set({ syncStatus: 'offline' });
     return;
   }
@@ -68,35 +61,18 @@ export const useStore = create<AppState>((set, get) => ({
   yearView: false,
   sidebarCollapsed: typeof window !== 'undefined' ? window.innerWidth <= 1024 : false,
 
-  // Load data from storage or generate demo data
+  // Load saved data. New installs start empty rather than seeding sample records.
   loadData: () => {
     const savedConfig = api.getConfig();
     const savedGoogleConfig = api.getGoogleConfig();
     const config = savedConfig || DEFAULT_CONFIG;
     const googleConfig = savedGoogleConfig || DEFAULT_GOOGLE_CONFIG;
 
-    let transactions = api.getTransactions();
-    let income = api.getIncome();
-    let investments = api.getInvestments();
-    let emergencyFund = api.getEmergencyFund();
-    let budgets = api.getBudgets();
-
-    // If no data, generate demo data
-    if (transactions.length === 0 && income.length === 0) {
-      transactions = generateDemoTransactions();
-      income = generateDemoIncome();
-      investments = generateDemoInvestments();
-      emergencyFund = generateDemoEmergencyFund();
-      budgets = generateDemoBudgets();
-
-      // Save demo data
-      api.saveTransactions(transactions);
-      api.saveIncome(income);
-      api.saveInvestments(investments);
-      api.saveEmergencyFund(emergencyFund);
-      api.saveBudgets(budgets);
-      api.saveConfig(config);
-    }
+    const transactions = api.getTransactions();
+    const income = api.getIncome();
+    const investments = api.getInvestments();
+    const emergencyFund = api.getEmergencyFund();
+    const budgets = api.getBudgets();
 
     set({
       transactions,
@@ -109,6 +85,51 @@ export const useStore = create<AppState>((set, get) => ({
       isLoading: false,
       syncStatus: googleConfig.configured ? (navigator.onLine ? 'synced' : 'offline') : 'offline',
     });
+  },
+
+  clearAllRecords: async () => {
+    const emptyRecords = {
+      transactions: [],
+      income: [],
+      investments: [],
+      emergencyFund: [],
+      budgets: [],
+    };
+
+    api.saveTransactions(emptyRecords.transactions);
+    api.saveIncome(emptyRecords.income);
+    api.saveInvestments(emptyRecords.investments);
+    api.saveEmergencyFund(emptyRecords.emergencyFund);
+    api.saveBudgets(emptyRecords.budgets);
+    set(emptyRecords);
+
+    const googleConfig = get().googleConfig;
+    if (!googleConfig.configured) {
+      showToast({ message: 'Local records cleared. FinFlow is ready for a fresh start.', type: 'success' });
+      return;
+    }
+
+    if (typeof navigator !== 'undefined' && !navigator.onLine) {
+      set({ syncStatus: 'offline' });
+      showToast({ message: 'Local records cleared. Connect to the internet to clear the connected sheet.', type: 'warning' });
+      return;
+    }
+
+    set({ syncStatus: 'syncing' });
+    try {
+      await Promise.all([
+        api.syncTransactions(googleConfig, []),
+        api.syncIncome(googleConfig, []),
+        api.syncInvestments(googleConfig, []),
+        api.syncEmergencyFund(googleConfig, []),
+        api.syncBudgets(googleConfig, []),
+      ]);
+      set({ syncStatus: 'synced' });
+      showToast({ message: 'Local records and connected sheet cleared.', type: 'success' });
+    } catch (error: any) {
+      set({ syncStatus: 'error' });
+      showToast({ message: `Local records are clear, but the connected sheet could not be cleared: ${error.message || 'Sync failed'}`, type: 'error' });
+    }
   },
 
   // --- Transaction Actions (Optimistic with Rollback) ---

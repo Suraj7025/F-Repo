@@ -24,7 +24,7 @@ import {
   Moon,
   Sun,
   Laptop,
-  RotateCcw,
+  Trash2,
   Edit2,
   ArrowRightLeft,
   ArrowDownToLine,
@@ -34,7 +34,6 @@ import { GlassCard, PageHeader, Modal, FormField } from '../components/shared';
 import { showToast } from '../hooks';
 import { api } from '../lib/api';
 import { GOOGLE_APPS_SCRIPT_CODE } from '../lib/google-script-template';
-import { generateDemoTransactions, generateDemoIncome, generateDemoInvestments, generateDemoEmergencyFund, generateDemoBudgets } from '../lib/demo-data';
 import type { GoogleConfig, Transaction } from '../types';
 
 type SettingsTab = 'config' | 'categories' | 'google' | 'import-export';
@@ -62,6 +61,8 @@ export default function SettingsPage() {
   const pullFromGoogle = useStore((s) => s.pullFromGoogle);
   const switchSpreadsheetId = useStore((s) => s.switchSpreadsheetId);
   const startNewYearSheet = useStore((s) => s.startNewYearSheet);
+  const clearAllRecords = useStore((s) => s.clearAllRecords);
+  const clearIsConnected = googleConfig.configured;
   const transactions = useStore((s) => s.transactions);
   const income = useStore((s) => s.income);
   const investments = useStore((s) => s.investments);
@@ -546,30 +547,9 @@ export default function SettingsPage() {
     showToast({ message: `Exported ${type} to CSV!`, type: 'success' });
   };
 
-  // Reset demo data handler
-  const handleResetDemoData = () => {
-    const demoTxns = generateDemoTransactions();
-    const demoInc = generateDemoIncome();
-    const demoInv = generateDemoInvestments();
-    const demoEf = generateDemoEmergencyFund();
-    const demoBud = generateDemoBudgets();
-
-    api.saveTransactions(demoTxns);
-    api.saveIncome(demoInc);
-    api.saveInvestments(demoInv);
-    api.saveEmergencyFund(demoEf);
-    api.saveBudgets(demoBud);
-
-    useStore.setState({
-      transactions: demoTxns,
-      income: demoInc,
-      investments: demoInv,
-      emergencyFund: demoEf,
-      budgets: demoBud,
-    });
-
+  const handleStartFresh = async () => {
     setShowResetModal(false);
-    showToast({ message: 'Reset to realistic demo dataset!', type: 'success' });
+    await clearAllRecords();
   };
 
   // Generate full Apps Script code with user's secret key
@@ -1009,7 +989,7 @@ export default function SettingsPage() {
               {googleConfig.configured ? <CheckCircle size={24} /> : <AlertCircle size={24} />}
               <div>
                 <h4 className="font-bold text-sm">
-                  {googleConfig.configured ? 'Google Sheets Sync Active' : 'Running in Local Demo Mode'}
+                  {googleConfig.configured ? 'Google Sheets Sync Active' : 'Running in Local Mode'}
                 </h4>
                 <p className="text-xs opacity-90">
                   {googleConfig.configured
@@ -1267,12 +1247,12 @@ export default function SettingsPage() {
                 </div>
               </div>
 
-              {/* 3. Migrate Local Demo Data */}
+              {/* 3. Sync Local Records */}
               <div className="p-4 rounded-xl bg-white/20 dark:bg-slate-800/30 space-y-3 flex flex-col justify-between">
                 <div>
                   <div className="flex items-center gap-2 mb-1">
                     <Cloud size={16} className="text-emerald-500" />
-                    <h4 className="font-semibold text-xs text-emerald-500">Migrate Demo Data to Sheet</h4>
+                    <h4 className="font-semibold text-xs text-emerald-500">Sync Local Records to Sheet</h4>
                   </div>
                   <p className="text-[11px]" style={{ color: 'var(--text-secondary)' }}>
                     Bulk upload all current transactions, income entries, investments, and budgets into your connected Google Sheet.
@@ -1493,20 +1473,20 @@ export default function SettingsPage() {
             </div>
           </GlassCard>
 
-          {/* Reset Demo Data */}
+          {/* Start Fresh */}
           <GlassCard className="p-6 border-rose-500/20 bg-rose-500/5">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div>
-                <h3 className="font-bold text-base text-rose-500">Reset to Demo Dataset</h3>
+                <h3 className="font-bold text-base text-rose-500">Start with an empty tracker</h3>
                 <p className="text-xs" style={{ color: 'var(--text-secondary)' }}>
-                  Restore 3-4 months of realistic sample transactions, income streams, mutual funds, and emergency fund entries for testing.
+                  Clear all transactions, income, investments, emergency fund entries, and budgets. Your preferences and connection settings stay in place.
                 </p>
               </div>
               <button
                 className="btn py-2 px-4 text-xs font-semibold text-white bg-rose-600 hover:bg-rose-700 rounded-xl flex items-center gap-1.5"
                 onClick={() => setShowResetModal(true)}
               >
-                <RotateCcw size={14} /> Reset Demo Data
+                <Trash2 size={14} /> Start Fresh
               </button>
             </div>
           </GlassCard>
@@ -1517,11 +1497,11 @@ export default function SettingsPage() {
       <Modal
         isOpen={showResetModal}
         onClose={() => setShowResetModal(false)}
-        title="Reset to Demo Data?"
+        title="Start with an empty tracker?"
       >
         <div className="space-y-4">
           <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
-            This action will replace your current local transactions, income, investments, and budgets with fresh realistic demo data. Are you sure?
+            This permanently clears all local transaction, income, investment, emergency fund, and budget records. {clearIsConnected ? `It also clears those record tabs from the connected Google Sheet (${googleConfig.spreadsheetId}).` : 'No Google Sheet is connected, so only this browser’s local records are affected.'} Your categories, preferences, and Google connection settings are kept. Export a JSON backup first if you may need these records later.
           </p>
           <div className="flex justify-end gap-3 pt-2">
             <button className="btn btn-secondary text-xs" onClick={() => setShowResetModal(false)}>
@@ -1529,9 +1509,9 @@ export default function SettingsPage() {
             </button>
             <button
               className="btn bg-rose-600 hover:bg-rose-700 text-white text-xs font-semibold px-4"
-              onClick={handleResetDemoData}
+              onClick={handleStartFresh}
             >
-              Confirm Reset
+              Clear records and start fresh
             </button>
           </div>
         </div>

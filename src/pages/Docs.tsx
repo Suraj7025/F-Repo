@@ -195,7 +195,7 @@ export default function Docs() {
             <div className="docs-hero-art"><FinanceIllustration /></div>
           </section>
 
-          <div className="docs-meta-row"><span><span className="docs-status-dot" /> Start with Demo Mode</span><span>11 short guides</span><span>Works on mobile</span></div>
+          <div className="docs-meta-row"><span><span className="docs-status-dot" /> Starts with an empty tracker</span><span>11 short guides</span><span>Works on mobile</span></div>
 
           <ArticleSection id="workflow" eyebrow="THE EVERYDAY FLOW" title="A simple monthly routine" intro="A little, often, works better than a big catch-up at the end of the month.">
             <div className="docs-steps">
@@ -267,14 +267,14 @@ export default function Docs() {
             <div className="docs-connection-flow">
               {['Create a spreadsheet', 'Add the Apps Script', 'Deploy as a web app', 'Enter details and test'].map((step, index) => <div key={step}><span>{index + 1}</span>{step}</div>)}
             </div>
-            <p>Open Settings → Google Sheets Setup and follow the built-in wizard. You’ll need the spreadsheet ID, the deployed web app URL, and a secret key you set in Apps Script. Test the connection before migrating demo data.</p>
-            <p>The setup screen also provides controls to switch spreadsheet, create a new year sheet, migrate demo records, and pull the latest data. The sync badge in the desktop sidebar shows current sync status.</p>
+            <p>Open Settings → Google Sheets Setup and follow the built-in wizard. You’ll need the spreadsheet ID, the deployed web app URL, and a secret key you set in Apps Script. Test the connection before syncing local records.</p>
+            <p>The setup screen also provides controls to switch spreadsheet, create a new year sheet, sync local records, and pull the latest data. The sync badge in the desktop sidebar shows current sync status.</p>
             <GuideNote>Keep your secret key private. If a sync fails, check the deployment URL and key, then use Test in Settings before retrying.</GuideNote>
           </ArticleSection>
 
           <ArticleSection id="backup" eyebrow="08 / DATA CARE" title="Backups & exports" intro="A JSON backup is the best way to keep a portable copy of your FinFlow records.">
             <p>Open Settings → Data & Import/Export. Export JSON for a full backup and restore workflow. Before an import is applied, FinFlow validates the file and shows a preview. CSV exports are available for Transactions, Income, and Investments.</p>
-            <p>In Demo Mode, data is stored in this browser. Clearing its site data may remove your local records. Export JSON before resetting demo data or moving to another browser/device.</p>
+            <p>In Local Mode, data is stored in this browser. Clearing its site data may remove your local records. Export JSON before clearing records or moving to another browser/device.</p>
             <GuideNote>Check the import preview and record counts before confirming a restore. Store exported files somewhere you control.</GuideNote>
           </ArticleSection>
 

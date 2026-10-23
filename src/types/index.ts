@@ -146,6 +146,7 @@ export interface AppState {
 
   // Actions - Data
   loadData: () => void;
+  clearAllRecords: () => Promise<void>;
   syncToGoogle: () => Promise<void>;
   migrateToGoogle: () => Promise<void>;
   pullFromGoogle: () => Promise<void>;
