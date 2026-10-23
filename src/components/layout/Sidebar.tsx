@@ -11,6 +11,7 @@ import {
   TrendingUp,
   PiggyBank,
   Settings,
+  BookOpen,
   ChevronLeft,
   Menu,
   Cloud,
@@ -28,6 +29,7 @@ const navItems = [
   { path: '/investments', icon: TrendingUp, label: 'I&S' },
   { path: '/budget', icon: PiggyBank, label: 'Budget' },
   { path: '/settings', icon: Settings, label: 'Settings' },
+  { path: '/docs', icon: BookOpen, label: 'Docs' },
 ];
 
 function SyncBadge() {
@@ -180,6 +182,7 @@ function MobileTabBar() {
     { path: '/investments', icon: TrendingUp, label: 'I&S' },
     { path: '/budget', icon: PiggyBank, label: 'Budget' },
     { path: '/settings', icon: Settings, label: 'Settings' },
+    { path: '/docs', icon: BookOpen, label: 'Docs' },
   ];
 
   return (

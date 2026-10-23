@@ -13,6 +13,7 @@ import Income from './pages/Income';
 import InvestmentsSavings from './pages/InvestmentsSavings';
 import BudgetPage from './pages/Budget';
 import SettingsPage from './pages/Settings';
+import Docs from './pages/Docs';
 import { useIsMobile } from './hooks';
 
 export default function App() {
@@ -77,6 +78,7 @@ export default function App() {
               <Route path="/investments" element={<InvestmentsSavings />} />
               <Route path="/budget" element={<BudgetPage />} />
               <Route path="/settings" element={<SettingsPage />} />
+              <Route path="/docs" element={<Docs />} />
               <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
           </div>
