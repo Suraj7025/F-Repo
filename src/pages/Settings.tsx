@@ -26,11 +26,14 @@ import {
   Laptop,
   RotateCcw,
   Edit2,
+  ArrowRightLeft,
+  ArrowDownToLine,
 } from 'lucide-react';
 import { useStore } from '../lib/store';
 import { GlassCard, PageHeader, Modal, FormField } from '../components/shared';
 import { showToast } from '../hooks';
 import { api } from '../lib/api';
+import { GOOGLE_APPS_SCRIPT_CODE } from '../lib/google-script-template';
 import { generateDemoTransactions, generateDemoIncome, generateDemoInvestments, generateDemoEmergencyFund, generateDemoBudgets } from '../lib/demo-data';
 import type { GoogleConfig, Transaction } from '../types';
 
@@ -56,6 +59,9 @@ export default function SettingsPage() {
   const googleConfig = useStore((s) => s.googleConfig);
   const updateGoogleConfig = useStore((s) => s.updateGoogleConfig);
   const migrateToGoogle = useStore((s) => s.migrateToGoogle);
+  const pullFromGoogle = useStore((s) => s.pullFromGoogle);
+  const switchSpreadsheetId = useStore((s) => s.switchSpreadsheetId);
+  const startNewYearSheet = useStore((s) => s.startNewYearSheet);
   const transactions = useStore((s) => s.transactions);
   const income = useStore((s) => s.income);
   const investments = useStore((s) => s.investments);
@@ -77,6 +83,11 @@ export default function SettingsPage() {
   const [testResult, setTestResult] = useState<{ success: boolean; message: string } | null>(null);
   const [isMigrating, setIsMigrating] = useState(false);
   const [isCreatingNewYear, setIsCreatingNewYear] = useState(false);
+  const [copiedScript, setCopiedScript] = useState(false);
+  const [switchSheetInput, setSwitchSheetInput] = useState('');
+  const [isSwitchingSheet, setIsSwitchingSheet] = useState(false);
+  const [isPullingData, setIsPullingData] = useState(false);
+  const [newYearTarget, setNewYearTarget] = useState(new Date().getFullYear() + 1);
 
   // Import State
   const [parsedRows, setParsedRows] = useState<{ data: Partial<Transaction>; valid: boolean; error?: string }[]>([]);
@@ -176,29 +187,46 @@ export default function SettingsPage() {
       return;
     }
     setIsCreatingNewYear(true);
-    const nextYear = new Date().getFullYear() + 1;
     try {
-      const res: any = await fetch(googleConfig.webAppUrl, {
-        method: 'POST',
-        headers: { 'Content-Type': 'text/plain' },
-        body: JSON.stringify({
-          action: 'createYearSpreadsheet',
-          secretKey: googleConfig.secretKey,
-          year: nextYear,
-        }),
-      }).then((r) => r.json());
-
-      if (res.success && res.spreadsheetId) {
-        updateGoogleConfig({ spreadsheetId: res.spreadsheetId });
-        setSheetUrlInput(res.spreadsheetId);
-        showToast({ message: `Created "${res.name}" sheet and switched!`, type: 'success' });
-      } else {
-        throw new Error(res.error || 'Failed to create sheet');
-      }
+      const newId = await startNewYearSheet(newYearTarget);
+      setSheetUrlInput(newId);
     } catch (e: any) {
-      showToast({ message: e.message || 'Failed to create new year sheet', type: 'error' });
+      // toast handled in store or fallback
+      console.error(e);
     } finally {
       setIsCreatingNewYear(false);
+    }
+  };
+
+  const handleSwitchSpreadsheet = async () => {
+    if (!switchSheetInput.trim()) {
+      showToast({ message: 'Please enter a Google Sheet URL or ID', type: 'warning' });
+      return;
+    }
+    setIsSwitchingSheet(true);
+    try {
+      await switchSpreadsheetId(switchSheetInput.trim());
+      setSheetUrlInput(extractSpreadsheetId(switchSheetInput));
+      setSwitchSheetInput('');
+    } catch (e: any) {
+      console.error(e);
+    } finally {
+      setIsSwitchingSheet(false);
+    }
+  };
+
+  const handlePullLatest = async () => {
+    if (!googleConfig.configured) {
+      showToast({ message: 'Google Sheets integration is not configured', type: 'warning' });
+      return;
+    }
+    setIsPullingData(true);
+    try {
+      await pullFromGoogle();
+    } catch (e: any) {
+      console.error(e);
+    } finally {
+      setIsPullingData(false);
     }
   };
 
@@ -544,50 +572,13 @@ export default function SettingsPage() {
     showToast({ message: 'Reset to realistic demo dataset!', type: 'success' });
   };
 
-  // Apps Script snippet for display
-  const appsScriptCode = `// FinFlow Google Apps Script Web App Backend (Code.gs)
-// Replace SECRET_KEY with your own private passphrase:
-const SECRET_KEY = "${secretKeyInput || 'YOUR_SECRET_PASSPHRASE'}";
-
-const TAB_HEADERS = {
-  Transactions: ["id", "date", "type", "amount", "category", "notes", "source"],
-  Income: ["id", "month", "source", "amount", "date", "notes"],
-  Investments: ["id", "date", "fundName", "type", "amount", "units", "currentValue", "category", "notes"],
-  EmergencyFund: ["id", "date", "type", "amount", "notes"],
-  Budgets: ["id", "month", "expectedIncome", "allocations"],
-  Config: ["key", "value"]
-};
-
-function doPost(e) {
-  try {
-    const payload = JSON.parse(e.postData.contents);
-    if (payload.secretKey !== SECRET_KEY) {
-      return jsonResponse({ error: "Unauthorized: Invalid Secret Key" });
-    }
-    if (payload.action === "ping") {
-      return jsonResponse({ success: true, message: "Connected to FinFlow!" });
-    }
-    const ss = SpreadsheetApp.openById(payload.spreadsheetId);
-    ensureAllTabs(ss);
-    
-    if (payload.action === "getAll") {
-      return jsonResponse({ success: true, data: getTabObjects(ss, payload.tab) });
-    }
-    if (payload.action.startsWith("sync")) {
-      const tab = payload.action.replace("sync", "");
-      overwriteTabData(ss, tab, payload.data || []);
-      return jsonResponse({ success: true });
-    }
-    return jsonResponse({ success: true });
-  } catch (err) {
-    return jsonResponse({ error: err.toString() });
-  }
-}
-
-function jsonResponse(data) {
-  return ContentService.createTextOutput(JSON.stringify(data))
-    .setMimeType(ContentService.MimeType.JSON);
-}`;
+  // Generate full Apps Script code with user's secret key
+  const appsScriptCode = secretKeyInput
+    ? GOOGLE_APPS_SCRIPT_CODE.replace(
+        'const SECRET_KEY = "CHANGE_THIS_TO_YOUR_SECRET_KEY";',
+        `const SECRET_KEY = "${secretKeyInput.replace(/"/g, '\\"')}";`
+      )
+    : GOOGLE_APPS_SCRIPT_CODE;
 
   return (
     <div className="space-y-6">
@@ -1086,10 +1077,13 @@ function jsonResponse(data) {
                     className="btn btn-secondary text-xs py-1 px-2.5 flex items-center gap-1.5"
                     onClick={() => {
                       navigator.clipboard.writeText(appsScriptCode);
-                      showToast({ message: 'Apps Script code copied to clipboard!', type: 'success' });
+                      setCopiedScript(true);
+                      setTimeout(() => setCopiedScript(false), 2500);
+                      showToast({ message: 'Full Code.gs script copied to clipboard!', type: 'success' });
                     }}
                   >
-                    <Copy size={13} /> Copy Code
+                    {copiedScript ? <Check size={13} className="text-emerald-500" /> : <Copy size={13} />}
+                    <span>{copiedScript ? 'Copied!' : 'Copy Code.gs'}</span>
                   </button>
                 </div>
                 <p className="text-xs" style={{ color: 'var(--text-secondary)' }}>
@@ -1200,36 +1194,118 @@ function jsonResponse(data) {
           </div>
 
           {/* Advanced Google Actions */}
-          <GlassCard className="p-6 space-y-4">
-            <h3 className="font-bold text-base" style={{ color: 'var(--text-primary)' }}>
-              Data Synchronization & Multi-Year Management
-            </h3>
+          <GlassCard className="p-6 space-y-5">
+            <div>
+              <h3 className="font-bold text-base" style={{ color: 'var(--text-primary)' }}>
+                Data Synchronization & Multi-Year Management
+              </h3>
+              <p className="text-xs mt-0.5" style={{ color: 'var(--text-secondary)' }}>
+                Seamlessly migrate datasets, branch into new annual sheets, switch between spreadsheets, and pull live updates.
+              </p>
+            </div>
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="p-4 rounded-xl bg-white/20 dark:bg-slate-800/30 space-y-2">
-                <h4 className="font-semibold text-xs text-indigo-500">Migrate Local Demo Data to Sheet</h4>
-                <p className="text-[11px]" style={{ color: 'var(--text-secondary)' }}>
-                  Upload all current transactions, income, investments, and budgets from localStorage directly into your connected Google Sheet.
-                </p>
+              {/* 1. Switch Spreadsheet ID */}
+              <div className="p-4 rounded-xl bg-white/20 dark:bg-slate-800/30 space-y-3 flex flex-col justify-between">
+                <div>
+                  <div className="flex items-center gap-2 mb-1">
+                    <ArrowRightLeft size={16} className="text-indigo-500" />
+                    <h4 className="font-semibold text-xs text-indigo-500">Switch Spreadsheet ID</h4>
+                  </div>
+                  <p className="text-[11px]" style={{ color: 'var(--text-secondary)' }}>
+                    Switch FinFlow to any previous or separate Google Sheet and automatically load all its records.
+                  </p>
+                </div>
+                <div className="space-y-2">
+                  <input
+                    type="text"
+                    placeholder="Paste Spreadsheet URL or ID..."
+                    value={switchSheetInput}
+                    onChange={(e) => setSwitchSheetInput(e.target.value)}
+                    className="input w-full text-xs"
+                  />
+                  <button
+                    className="btn btn-secondary text-xs w-full"
+                    onClick={handleSwitchSpreadsheet}
+                    disabled={isSwitchingSheet || !switchSheetInput.trim()}
+                  >
+                    <ArrowRightLeft size={14} className={isSwitchingSheet ? 'animate-spin' : ''} />
+                    {isSwitchingSheet ? 'Switching & Loading...' : 'Switch Active Sheet'}
+                  </button>
+                </div>
+              </div>
+
+              {/* 2. Start New Year Sheet */}
+              <div className="p-4 rounded-xl bg-white/20 dark:bg-slate-800/30 space-y-3 flex flex-col justify-between">
+                <div>
+                  <div className="flex items-center gap-2 mb-1">
+                    <FileSpreadsheet size={16} className="text-indigo-500" />
+                    <h4 className="font-semibold text-xs text-indigo-500">Start New Year Sheet</h4>
+                  </div>
+                  <p className="text-[11px]" style={{ color: 'var(--text-secondary)' }}>
+                    Creates a fresh Google Sheet with all pre-formatted tabs for a new financial year and auto-links it.
+                  </p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="number"
+                    min="2020"
+                    max="2040"
+                    value={newYearTarget}
+                    onChange={(e) => setNewYearTarget(Number(e.target.value) || new Date().getFullYear())}
+                    className="input text-xs w-24"
+                    title="Target Year"
+                  />
+                  <button
+                    className="btn btn-secondary text-xs flex-1"
+                    onClick={handleCreateNewYearSheet}
+                    disabled={isCreatingNewYear || !googleConfig.configured}
+                  >
+                    <FileSpreadsheet size={14} className={isCreatingNewYear ? 'animate-spin' : ''} />
+                    {isCreatingNewYear ? 'Creating...' : `Create "${newYearTarget}" Sheet`}
+                  </button>
+                </div>
+              </div>
+
+              {/* 3. Migrate Local Demo Data */}
+              <div className="p-4 rounded-xl bg-white/20 dark:bg-slate-800/30 space-y-3 flex flex-col justify-between">
+                <div>
+                  <div className="flex items-center gap-2 mb-1">
+                    <Cloud size={16} className="text-emerald-500" />
+                    <h4 className="font-semibold text-xs text-emerald-500">Migrate Demo Data to Sheet</h4>
+                  </div>
+                  <p className="text-[11px]" style={{ color: 'var(--text-secondary)' }}>
+                    Bulk upload all current transactions, income entries, investments, and budgets into your connected Google Sheet.
+                  </p>
+                </div>
                 <button
-                  className="btn btn-secondary text-xs"
+                  className="btn btn-secondary text-xs w-full"
                   onClick={handleMigrate}
                   disabled={isMigrating || !googleConfig.configured}
                 >
-                  <Cloud size={14} /> {isMigrating ? 'Migrating...' : 'Migrate Data Now'}
+                  <Cloud size={14} className={isMigrating ? 'animate-spin' : ''} />
+                  {isMigrating ? 'Migrating Data...' : 'Migrate Data to Sheet Now'}
                 </button>
               </div>
 
-              <div className="p-4 rounded-xl bg-white/20 dark:bg-slate-800/30 space-y-2">
-                <h4 className="font-semibold text-xs text-indigo-500">Start New Year Sheet</h4>
-                <p className="text-[11px]" style={{ color: 'var(--text-secondary)' }}>
-                  Creates a fresh Google Sheet for next financial year and points FinFlow to it seamlessly.
-                </p>
+              {/* 4. Pull Latest from Sheet */}
+              <div className="p-4 rounded-xl bg-white/20 dark:bg-slate-800/30 space-y-3 flex flex-col justify-between">
+                <div>
+                  <div className="flex items-center gap-2 mb-1">
+                    <ArrowDownToLine size={16} className="text-violet-500" />
+                    <h4 className="font-semibold text-xs text-violet-500">Pull Latest from Sheet</h4>
+                  </div>
+                  <p className="text-[11px]" style={{ color: 'var(--text-secondary)' }}>
+                    Refresh your local cache with changes made directly on Google Sheets or another device.
+                  </p>
+                </div>
                 <button
-                  className="btn btn-secondary text-xs"
-                  onClick={handleCreateNewYearSheet}
-                  disabled={isCreatingNewYear || !googleConfig.configured}
+                  className="btn btn-secondary text-xs w-full"
+                  onClick={handlePullLatest}
+                  disabled={isPullingData || !googleConfig.configured}
                 >
-                  <FileSpreadsheet size={14} /> {isCreatingNewYear ? 'Creating...' : 'Create New Year Sheet'}
+                  <RefreshCw size={14} className={isPullingData ? 'animate-spin' : ''} />
+                  {isPullingData ? 'Pulling Data...' : 'Pull Latest from Sheet'}
                 </button>
               </div>
             </div>

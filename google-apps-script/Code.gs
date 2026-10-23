@@ -77,6 +77,28 @@ function doPost(e) {
         return jsonResponse({ success: true, data: rows });
       }
 
+      case "add": {
+        const tab = payload.tab;
+        const item = payload.item;
+        appendTabRow(ss, tab, item);
+        return jsonResponse({ success: true });
+      }
+
+      case "update": {
+        const tab = payload.tab;
+        const id = payload.id;
+        const updates = payload.updates;
+        updateTabRow(ss, tab, id, updates);
+        return jsonResponse({ success: true });
+      }
+
+      case "delete": {
+        const tab = payload.tab;
+        const id = payload.id;
+        deleteTabRow(ss, tab, id);
+        return jsonResponse({ success: true });
+      }
+
       case "syncTransactions":
       case "syncIncome":
       case "syncInvestments":
@@ -195,6 +217,71 @@ function overwriteTabData(ss, tabName, items) {
   });
 
   sheet.getRange(2, 1, rows.length, headers.length).setValues(rows);
+}
+
+/**
+ * Append a single item row to tab
+ */
+function appendTabRow(ss, tabName, item) {
+  const sheet = ss.getSheetByName(tabName);
+  const headers = TAB_HEADERS[tabName];
+  if (!sheet || !headers || !item) return;
+
+  const row = headers.map(function(key) {
+    const val = item[key];
+    if (typeof val === "object" && val !== null) {
+      return JSON.stringify(val);
+    }
+    return val !== undefined && val !== null ? val : "";
+  });
+  sheet.appendRow(row);
+}
+
+/**
+ * Update row matching id in tab
+ */
+function updateTabRow(ss, tabName, id, updates) {
+  const sheet = ss.getSheetByName(tabName);
+  const headers = TAB_HEADERS[tabName];
+  if (!sheet || !headers || !id) return;
+
+  const lastRow = sheet.getLastRow();
+  if (lastRow <= 1) return;
+
+  const idColValues = sheet.getRange(2, 1, lastRow - 1, 1).getValues();
+  for (let i = 0; i < idColValues.length; i++) {
+    if (String(idColValues[i][0]) === String(id)) {
+      const rowNum = i + 2;
+      const currentValues = sheet.getRange(rowNum, 1, 1, headers.length).getValues()[0];
+      headers.forEach(function(header, idx) {
+        if (updates[header] !== undefined) {
+          const val = updates[header];
+          currentValues[idx] = typeof val === "object" && val !== null ? JSON.stringify(val) : val;
+        }
+      });
+      sheet.getRange(rowNum, 1, 1, headers.length).setValues([currentValues]);
+      break;
+    }
+  }
+}
+
+/**
+ * Delete row matching id in tab
+ */
+function deleteTabRow(ss, tabName, id) {
+  const sheet = ss.getSheetByName(tabName);
+  if (!sheet || !id) return;
+
+  const lastRow = sheet.getLastRow();
+  if (lastRow <= 1) return;
+
+  const idColValues = sheet.getRange(2, 1, lastRow - 1, 1).getValues();
+  for (let i = 0; i < idColValues.length; i++) {
+    if (String(idColValues[i][0]) === String(id)) {
+      sheet.deleteRow(i + 2);
+      break;
+    }
+  }
 }
 
 /**

@@ -44,11 +44,19 @@ function saveToStorage<T>(key: string, data: T): void {
 async function googleRequest(
   googleConfig: GoogleConfig,
   action: string,
-  payload: Record<string, unknown> = {}
+  payload: Record<string, unknown> = {},
+  timeoutMs: number = 20000
 ): Promise<unknown> {
+  if (typeof navigator !== 'undefined' && !navigator.onLine) {
+    throw new Error('You are currently offline. Local cache is being used.');
+  }
+
   if (!googleConfig.configured || !googleConfig.webAppUrl) {
     throw new Error('Google Sheets not configured');
   }
+
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
 
   const body = {
     action,
@@ -57,17 +65,32 @@ async function googleRequest(
     ...payload,
   };
 
-  const response = await fetch(googleConfig.webAppUrl, {
-    method: 'POST',
-    headers: { 'Content-Type': 'text/plain' },
-    body: JSON.stringify(body),
-  });
+  try {
+    const response = await fetch(googleConfig.webAppUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain' },
+      body: JSON.stringify(body),
+      signal: controller.signal,
+    });
 
-  const result = await response.json();
-  if (result.error) {
-    throw new Error(result.error);
+    clearTimeout(timer);
+
+    if (!response.ok) {
+      throw new Error(`Google Apps Script error (HTTP ${response.status}): ${response.statusText}`);
+    }
+
+    const result = await response.json();
+    if (result && result.error) {
+      throw new Error(result.error);
+    }
+    return result;
+  } catch (err: any) {
+    clearTimeout(timer);
+    if (err.name === 'AbortError') {
+      throw new Error('Request timed out connecting to Google Apps Script. Please check your network or URL.');
+    }
+    throw err;
   }
-  return result;
 }
 
 // --- API Functions ---
@@ -200,5 +223,46 @@ export const api = {
       budgets: data.budgets,
       config: data.config,
     });
+  },
+
+  // --- Create Year Spreadsheet ---
+  async createYearSpreadsheet(
+    googleConfig: GoogleConfig,
+    year: number
+  ): Promise<{ spreadsheetId: string; name: string }> {
+    const result = (await googleRequest(googleConfig, 'createYearSpreadsheet', { year })) as {
+      success: boolean;
+      spreadsheetId: string;
+      name: string;
+    };
+    return result;
+  },
+
+  // --- Fetch All Data from Google Sheet ---
+  async fetchAllFromGoogle(googleConfig: GoogleConfig): Promise<{
+    transactions?: Transaction[];
+    income?: IncomeEntry[];
+    investments?: Investment[];
+    emergencyFund?: EmergencyFundEntry[];
+    budgets?: Budget[];
+    config?: Partial<AppConfig>;
+  }> {
+    const [txRes, incRes, invRes, efRes, budRes, cfgRes] = await Promise.all([
+      googleRequest(googleConfig, 'getAll', { tab: 'Transactions' }).catch(() => ({ data: [] })) as Promise<{ data: Transaction[] }>,
+      googleRequest(googleConfig, 'getAll', { tab: 'Income' }).catch(() => ({ data: [] })) as Promise<{ data: IncomeEntry[] }>,
+      googleRequest(googleConfig, 'getAll', { tab: 'Investments' }).catch(() => ({ data: [] })) as Promise<{ data: Investment[] }>,
+      googleRequest(googleConfig, 'getAll', { tab: 'EmergencyFund' }).catch(() => ({ data: [] })) as Promise<{ data: EmergencyFundEntry[] }>,
+      googleRequest(googleConfig, 'getAll', { tab: 'Budgets' }).catch(() => ({ data: [] })) as Promise<{ data: Budget[] }>,
+      googleRequest(googleConfig, 'getConfig').catch(() => ({ data: {} })) as Promise<{ data: Partial<AppConfig> }>,
+    ]);
+
+    return {
+      transactions: Array.isArray(txRes?.data) ? txRes.data : [],
+      income: Array.isArray(incRes?.data) ? incRes.data : [],
+      investments: Array.isArray(invRes?.data) ? invRes.data : [],
+      emergencyFund: Array.isArray(efRes?.data) ? efRes.data : [],
+      budgets: Array.isArray(budRes?.data) ? budRes.data : [],
+      config: cfgRes?.data || {},
+    };
   },
 };

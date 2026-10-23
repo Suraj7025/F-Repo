@@ -146,4 +146,7 @@ export interface AppState {
   loadData: () => void;
   syncToGoogle: () => Promise<void>;
   migrateToGoogle: () => Promise<void>;
+  pullFromGoogle: () => Promise<void>;
+  switchSpreadsheetId: (spreadsheetIdOrUrl: string) => Promise<void>;
+  startNewYearSheet: (year?: number) => Promise<string>;
 }

@@ -34,22 +34,32 @@ const navItems = [
 function SyncBadge() {
   const syncStatus = useStore((s) => s.syncStatus);
   const isGoogle = useStore((s) => s.googleConfig.configured);
+  const syncToGoogle = useStore((s) => s.syncToGoogle);
 
   const statusConfig = {
-    synced: { icon: Cloud, label: 'Synced', className: 'sync-synced' },
-    syncing: { icon: Loader2, label: 'Syncing', className: 'sync-syncing' },
-    offline: { icon: CloudOff, label: isGoogle ? 'Offline' : 'Demo Mode', className: 'sync-offline' },
-    error: { icon: AlertCircle, label: 'Sync Error', className: 'sync-error' },
+    synced: { icon: Cloud, label: 'Synced', className: 'sync-synced', tooltip: 'All changes synced. Click to re-sync.' },
+    syncing: { icon: Loader2, label: 'Syncing...', className: 'sync-syncing', tooltip: 'Syncing changes to Google Sheets...' },
+    offline: { icon: CloudOff, label: isGoogle ? 'Offline (Cached)' : 'Demo Mode', className: 'sync-offline', tooltip: isGoogle ? 'Device offline. Changes stored in local cache.' : 'Running in local demo mode. Connect Google in Settings.' },
+    error: { icon: AlertCircle, label: 'Sync Error', className: 'sync-error', tooltip: 'Sync failed. Click to retry sync.' },
   };
 
   const config = statusConfig[syncStatus];
   const Icon = config.icon;
 
   return (
-    <div className={`sync-indicator ${config.className}`}>
+    <button
+      type="button"
+      className={`sync-indicator ${config.className} cursor-pointer hover:opacity-90 transition-all text-left w-full border-none outline-none`}
+      title={config.tooltip}
+      onClick={() => {
+        if (isGoogle && syncStatus !== 'syncing') {
+          syncToGoogle();
+        }
+      }}
+    >
       <Icon size={14} className={syncStatus === 'syncing' ? 'animate-spin' : ''} />
       <span>{config.label}</span>
-    </div>
+    </button>
   );
 }
 
