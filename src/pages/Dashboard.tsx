@@ -91,7 +91,12 @@ export default function Dashboard() {
       ? Math.max(0, Math.round((1 - Math.max(0, totalSpend - budgetTotal) / budgetTotal) * 100))
       : 70;
 
-    const healthScore = calculateHealthScore(savingsRate, efMonths, budgetAdherence);
+    // A default adherence value is useful once the user has financial activity,
+    // but it should not manufacture a score for a completely fresh account.
+    const hasHealthData = totalIncome > 0 || totalSpend > 0 || efBalance > 0 || budgetTotal > 0;
+    const healthScore = hasHealthData
+      ? calculateHealthScore(savingsRate, efMonths, budgetAdherence)
+      : 0;
 
     // Category spending
     const categorySpending = getSpendingByCategory(monthTxns);
@@ -126,7 +131,7 @@ export default function Dashboard() {
       investmentValue,
       prevTotalSpend, prevTotalIncome,
       categorySpending, sourceSpending, dailySpending, trendData,
-      healthScore, efMonths, insights, recentTxns, budget, budgetTotal,
+      healthScore, hasHealthData, efMonths, insights, recentTxns, budget, budgetTotal,
       dailySafe, remainingDays, budgetAdherence,
     };
   }, [transactions, income, investments, emergencyFund, budgets, config, selectedMonth]);
@@ -387,12 +392,12 @@ export default function Dashboard() {
           <h3 className="text-sm font-semibold mb-3" style={{ color: 'var(--text-secondary)' }}>
             Financial Health
           </h3>
-          <HealthScoreRing score={data.healthScore} />
+          <HealthScoreRing score={data.healthScore} hasData={data.hasHealthData} />
           <span
             className="text-sm font-semibold mt-2"
-            style={{ color: getHealthScoreColor(data.healthScore) }}
+            style={{ color: data.hasHealthData ? getHealthScoreColor(data.healthScore) : 'var(--text-tertiary)' }}
           >
-            {getHealthScoreLabel(data.healthScore)}
+            {data.hasHealthData ? getHealthScoreLabel(data.healthScore) : 'No data yet'}
           </span>
         </GlassCard>
       </div>
@@ -644,7 +649,7 @@ function AnimatedStatCard({ label, value, icon, color, trend, trendLabel, delay,
 }
 
 // --- Health Score Ring ---
-function HealthScoreRing({ score }: { score: number }) {
+function HealthScoreRing({ score, hasData }: { score: number; hasData: boolean }) {
   const color = getHealthScoreColor(score);
   const radius = 50;
   const circumference = 2 * Math.PI * radius;
@@ -677,7 +682,7 @@ function HealthScoreRing({ score }: { score: number }) {
       </svg>
       <div className="absolute inset-0 flex items-center justify-center" style={{ transform: 'rotate(90deg)' }}>
         <span className="text-2xl font-bold tabular-nums" style={{ color }}>
-          {score}
+          {hasData ? score : '—'}
         </span>
       </div>
     </div>
