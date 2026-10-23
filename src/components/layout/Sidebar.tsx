@@ -203,11 +203,11 @@ function MobileTabBar() {
           <NavLink
             key={item.path}
             to={item.path}
-            className="flex flex-col items-center gap-0.5 py-1 px-3 rounded-xl transition-all"
+            className="relative flex flex-1 min-w-0 flex-col items-center gap-0.5 py-1 px-1 rounded-xl transition-all"
             style={{
               color: isActive ? 'var(--color-primary)' : 'var(--text-tertiary)',
               textDecoration: 'none',
-              minWidth: '56px',
+              minWidth: 0,
             }}
           >
             {isActive && (

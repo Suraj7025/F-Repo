@@ -547,3 +547,15 @@ input::placeholder, textarea::placeholder {
   border-radius: 4px;
   transition: width var(--transition-normal);
 }
+
+/* Keep the mobile tab bar clear of device home indicators and notches. */
+.safe-area-pb {
+  padding-bottom: calc(0.5rem + env(safe-area-inset-bottom, 0px));
+}
+
+@media (max-width: 768px) {
+  .modal-content {
+    max-height: 90dvh;
+    padding-bottom: calc(1.5rem + env(safe-area-inset-bottom, 0px)) !important;
+  }
+}
