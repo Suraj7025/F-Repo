@@ -151,6 +151,9 @@ body::after {
   border: 1px solid var(--glass-border);
   border-radius: var(--glass-radius);
   box-shadow: var(--glass-shadow);
+}
+
+:where(.glass:not(.fixed):not(.absolute):not(.sticky)) {
   position: relative;
 }
 

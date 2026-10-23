@@ -54,16 +54,16 @@ export default function App() {
         />
       </div>
 
-      <div className="relative z-10 min-h-screen flex flex-col">
+      <div className="relative z-10 min-h-screen">
         {/* Sidebar / Navigation */}
         <Sidebar />
 
         {/* Main Content Area */}
         <main
-          className={`flex-1 transition-all duration-300 ${
+          className={`min-h-screen transition-all duration-300 ${
             isMobile
               ? 'px-4 pt-4 pb-28'
-              : 'pl-[96px] xl:pl-[280px] pr-6 pt-6 pb-16'
+              : 'pl-[100px] md:pl-[290px] pr-6 pt-6 pb-16'
           }`}
         >
           <div className="max-w-7xl mx-auto">

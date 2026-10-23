@@ -76,11 +76,18 @@ export function Sidebar() {
 
   return (
     <motion.aside
-      className="glass fixed left-4 top-4 bottom-4 z-50 flex flex-col overflow-hidden"
+      className="glass !fixed left-4 top-4 bottom-4 z-50 flex flex-col overflow-hidden"
       initial={false}
       animate={{ width: collapsed ? 72 : 260 }}
       transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-      style={{ borderRadius: 'var(--glass-radius-lg)' }}
+      style={{
+        position: 'fixed',
+        top: '16px',
+        bottom: '16px',
+        left: '16px',
+        zIndex: 50,
+        borderRadius: 'var(--glass-radius-lg)',
+      }}
     >
       {/* Header */}
       <div className="flex items-center justify-between p-4 pb-2">
@@ -178,8 +185,15 @@ function MobileTabBar() {
 
   return (
     <div
-      className="glass fixed bottom-0 left-0 right-0 z-50 flex items-center justify-around px-2 py-2 safe-area-pb"
-      style={{ borderRadius: '20px 20px 0 0' }}
+      className="glass !fixed bottom-0 left-0 right-0 z-50 flex items-center justify-around px-2 py-2 safe-area-pb"
+      style={{
+        position: 'fixed',
+        bottom: 0,
+        left: 0,
+        right: 0,
+        zIndex: 50,
+        borderRadius: '20px 20px 0 0',
+      }}
     >
       {mobileItems.map((item) => {
         const isActive = item.path === '/'
