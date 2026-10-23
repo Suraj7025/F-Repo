@@ -166,76 +166,78 @@ export default function Transactions() {
 
       {/* Toolbar */}
       <GlassCard className="p-4 mb-6" delay={0.12}>
-        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
-          {/* Search */}
-          <div className="relative flex-1">
-            <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: 'var(--text-tertiary)' }} />
-            <input
-              type="text"
-              placeholder="Search transactions..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="pl-9"
-              style={{ borderRadius: '12px' }}
-            />
-          </div>
+        <div className="flex flex-col gap-3">
+          <div className="flex flex-col md:flex-row md:items-center gap-3 min-w-0">
+            {/* Search */}
+            <div className="relative min-w-0 md:flex-1 md:min-w-[220px]">
+              <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" style={{ color: 'var(--text-tertiary)' }} />
+              <input
+                type="text"
+                placeholder="Search transactions..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="w-full pl-10"
+                style={{ borderRadius: '12px' }}
+              />
+            </div>
 
-          {/* Filters */}
-          <div className="flex items-center gap-2 overflow-x-auto pb-1">
-            <select
-              value={filterCategory}
-              onChange={(e) => setFilterCategory(e.target.value)}
-              className="text-sm"
-              style={{ minWidth: '120px', borderRadius: '12px' }}
-            >
-              <option value="">All Categories</option>
-              {config.categories.map((c) => (
-                <option key={c} value={c}>{c}</option>
-              ))}
-            </select>
+            {/* Filters */}
+            <div className="grid grid-cols-2 sm:flex sm:flex-wrap md:flex-nowrap items-center gap-2 min-w-0">
+              <select
+                value={filterCategory}
+                onChange={(e) => setFilterCategory(e.target.value)}
+                className="text-sm min-w-0"
+                style={{ borderRadius: '12px' }}
+              >
+                <option value="">All Categories</option>
+                {config.categories.map((c) => (
+                  <option key={c} value={c}>{c}</option>
+                ))}
+              </select>
 
-            <select
-              value={filterSource}
-              onChange={(e) => setFilterSource(e.target.value)}
-              className="text-sm"
-              style={{ minWidth: '100px', borderRadius: '12px' }}
-            >
-              <option value="">All Sources</option>
-              {config.sources.map((s) => (
-                <option key={s} value={s}>{s}</option>
-              ))}
-            </select>
+              <select
+                value={filterSource}
+                onChange={(e) => setFilterSource(e.target.value)}
+                className="text-sm min-w-0"
+                style={{ borderRadius: '12px' }}
+              >
+                <option value="">All Sources</option>
+                {config.sources.map((s) => (
+                  <option key={s} value={s}>{s}</option>
+                ))}
+              </select>
 
-            <select
-              value={filterType}
-              onChange={(e) => setFilterType(e.target.value as '' | TransactionType)}
-              className="text-sm"
-              style={{ minWidth: '90px', borderRadius: '12px' }}
-            >
-              <option value="">All Types</option>
-              <option value="Spend">Spend</option>
-              <option value="Credit">Credit</option>
-            </select>
+              <select
+                value={filterType}
+                onChange={(e) => setFilterType(e.target.value as '' | TransactionType)}
+                className="text-sm min-w-0 col-span-2 sm:col-span-1"
+                style={{ borderRadius: '12px' }}
+              >
+                <option value="">All Types</option>
+                <option value="Spend">Spend</option>
+                <option value="Credit">Credit</option>
+              </select>
+            </div>
           </div>
 
           {/* Actions */}
-          <div className="flex flex-col sm:flex-row items-stretch gap-2">
-            <div className="flex items-center gap-2">
-              <button className="btn-secondary flex-1 sm:flex-none" onClick={() => openAddTransaction('Credit')}>
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 min-w-0">
+            <div className="grid grid-cols-2 sm:flex items-center gap-2">
+              <button className="btn-secondary justify-center" onClick={() => openAddTransaction('Credit')}>
                 <TrendingUp size={16} /> Add Credit
               </button>
-              <button className="btn-primary flex-1 sm:flex-none" onClick={() => openAddTransaction('Spend')}>
+              <button className="btn-primary justify-center" onClick={() => openAddTransaction('Spend')}>
                 <Plus size={16} /> Add Spend
               </button>
             </div>
-            <div className="flex items-center gap-2 overflow-x-auto pb-1">
-              <button className="btn-secondary text-xs shrink-0" onClick={handleExportJSON}>
+            <div className="grid grid-cols-3 sm:flex items-center gap-2">
+              <button className="btn-secondary text-xs justify-center" onClick={handleExportJSON}>
                 <Download size={14} /> JSON
               </button>
-              <button className="btn-secondary text-xs shrink-0" onClick={handleExportCSV}>
+              <button className="btn-secondary text-xs justify-center" onClick={handleExportCSV}>
                 <Download size={14} /> CSV
               </button>
-              <button className="btn-secondary text-xs shrink-0" onClick={() => setShowImport(true)}>
+              <button className="btn-secondary text-xs justify-center" onClick={() => setShowImport(true)}>
                 <Upload size={14} /> Import
               </button>
             </div>
