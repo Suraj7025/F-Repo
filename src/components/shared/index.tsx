@@ -45,6 +45,7 @@ export function PageHeader({ title, subtitle, children }: PageHeaderProps) {
       className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6"
       initial={{ opacity: 0, y: -10 }}
       animate={{ opacity: 1, y: 0 }}
+      style={{ position: 'relative', zIndex: 50 }}
     >
       <div>
         <h1 className="text-2xl sm:text-3xl font-bold" style={{ color: 'var(--text-primary)' }}>
