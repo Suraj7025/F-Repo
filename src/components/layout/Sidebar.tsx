@@ -19,8 +19,7 @@ import {
   AlertCircle,
 } from 'lucide-react';
 import { useStore } from '../../lib/store';
-import { useIsMobile, useIsTablet } from '../../hooks';
-import { useState } from 'react';
+import { useIsMobile } from '../../hooks';
 
 const navItems = [
   { path: '/', icon: LayoutDashboard, label: 'Dashboard' },
@@ -65,8 +64,8 @@ function SyncBadge() {
 
 export function Sidebar() {
   const isMobile = useIsMobile();
-  const isTablet = useIsTablet();
-  const [collapsed, setCollapsed] = useState(isTablet);
+  const collapsed = useStore((s) => s.sidebarCollapsed);
+  const setSidebarCollapsed = useStore((s) => s.setSidebarCollapsed);
   const location = useLocation();
 
   // Mobile: bottom tab bar
@@ -110,7 +109,7 @@ export function Sidebar() {
         </AnimatePresence>
         <button
           className="btn-icon"
-          onClick={() => setCollapsed(!collapsed)}
+          onClick={() => setSidebarCollapsed(!collapsed)}
           aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
         >
           {collapsed ? <Menu size={20} /> : <ChevronLeft size={20} />}

@@ -17,6 +17,7 @@ import { useIsMobile } from './hooks';
 
 export default function App() {
   const theme = useStore((s) => s.config.theme);
+  const sidebarCollapsed = useStore((s) => s.sidebarCollapsed);
   const isMobile = useIsMobile();
 
   useEffect(() => {
@@ -60,10 +61,12 @@ export default function App() {
 
         {/* Main Content Area */}
         <main
-          className={`min-h-screen transition-all duration-300 ${
+          className={`min-h-screen transition-all duration-300 ease-in-out ${
             isMobile
               ? 'px-4 pt-4 pb-28'
-              : 'pl-[100px] md:pl-[290px] pr-6 pt-6 pb-16'
+              : sidebarCollapsed
+              ? 'pl-[104px] pr-6 pt-6 pb-16'
+              : 'pl-[296px] pr-6 pt-6 pb-16'
           }`}
         >
           <div className="max-w-7xl mx-auto">

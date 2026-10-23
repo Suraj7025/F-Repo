@@ -66,6 +66,7 @@ export const useStore = create<AppState>((set, get) => ({
   isLoading: true,
   selectedMonth: getCurrentMonth(),
   yearView: false,
+  sidebarCollapsed: typeof window !== 'undefined' ? window.innerWidth <= 1024 : false,
 
   // Load data from storage or generate demo data
   loadData: () => {
@@ -423,6 +424,11 @@ export const useStore = create<AppState>((set, get) => ({
   setSelectedMonth: (month) => set({ selectedMonth: month }),
   setYearView: (yearView) => set({ yearView }),
   setSyncStatus: (syncStatus) => set({ syncStatus }),
+  setSidebarCollapsed: (collapsed) =>
+    set((state) => ({
+      sidebarCollapsed:
+        typeof collapsed === 'function' ? collapsed(state.sidebarCollapsed) : collapsed,
+    })),
 
   // --- Full Sync ---
   syncToGoogle: async () => {

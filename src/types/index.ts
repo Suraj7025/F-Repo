@@ -107,6 +107,7 @@ export interface AppState {
   isLoading: boolean;
   selectedMonth: string; // YYYY-MM
   yearView: boolean;
+  sidebarCollapsed: boolean;
 
   // Actions - Transactions
   addTransaction: (t: Omit<Transaction, 'id'>) => void;
@@ -141,6 +142,7 @@ export interface AppState {
   setSelectedMonth: (month: string) => void;
   setYearView: (yearView: boolean) => void;
   setSyncStatus: (status: SyncStatus) => void;
+  setSidebarCollapsed: (collapsed: boolean | ((prev: boolean) => boolean)) => void;
 
   // Actions - Data
   loadData: () => void;
