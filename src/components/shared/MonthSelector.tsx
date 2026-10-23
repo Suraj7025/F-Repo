@@ -108,7 +108,7 @@ export function MonthSelector() {
             </div>
             <div className="grid grid-cols-4 gap-1 mb-4">
               {Array.from({ length: 12 }, (_, index) => firstYear + index).map((year) => {
-                const isSelected = year === Number(selectedMonth.slice(0, 4));
+                const isSelected = year === pickerYear;
                 return (
                   <button
                     key={year}

@@ -31,7 +31,7 @@
   --glass-radius-sm: 14px;
 
   /* Background */
-  --bg-gradient: linear-gradient(135deg, #e0e7ff 0%, #fce7f3 25%, #ede9fe 50%, #dbeafe 75%, #e0e7ff 100%);
+  --bg-gradient: linear-gradient(135deg, #a5b4fc 0%, #bfdbfe 25%, #c4b5fd 50%, #93c5fd 75%, #a5b4fc 100%);
 
   /* Text */
   --text-primary: #0f172a;
